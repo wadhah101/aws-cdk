@@ -205,7 +205,7 @@ export class Trigger extends TriggerBase {
       name: props.triggerName,
       actions: props.actions,
       description: props.description,
-      type: props.type.name,
+      type: props.type,
     });
 
     const resourceName = this.getResourceNameAttribute(triggerResource.ref);
