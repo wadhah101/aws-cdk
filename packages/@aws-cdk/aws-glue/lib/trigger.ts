@@ -320,11 +320,21 @@ export interface TriggerAttributes {
  * Construction properties for {@link Job}.
  */
 export interface TriggerProps {
-  /**
-   * The job's executable properties.
-   */
-  readonly executable: JobExecutable;
 
+  readonly actions: any[]
+
+  readonly description: string,
+  
+  readonly predicate: any
+  
+  readonly schedule: any,
+
+  readonly startOnCreation: boolean
+  
+  readonly type: TriggerType,
+
+  readonly workflowName: string 
+  
   /**
    * The name of the job.
    *
@@ -332,94 +342,7 @@ export interface TriggerProps {
    */
   readonly triggerName?: string;
 
-  /**
-   * The description of the job.
-   *
-   * @default - no value
-   */
-  readonly description?: string;
 
-  /**
-   * The number of AWS Glue data processing units (DPUs) that can be allocated when this job runs.
-   * Cannot be used for Glue version 2.0 and later - workerType and workerCount should be used instead.
-   *
-   * @default - 10 when job type is Apache Spark ETL or streaming, 0.0625 when job type is Python shell
-   */
-  readonly maxCapacity?: number;
-
-  /**
-   * The maximum number of times to retry this job after a job run fails.
-   *
-   * @default 0
-   */
-  readonly maxRetries?: number;
-
-  /**
-   * The maximum number of concurrent runs allowed for the job.
-   *
-   * An error is returned when this threshold is reached. The maximum value you can specify is controlled by a service limit.
-   *
-   * @default 1
-   */
-  readonly maxConcurrentRuns?: number;
-
-  /**
-   * The number of minutes to wait after a job run starts, before sending a job run delay notification.
-   *
-   * @default - no delay notifications
-   */
-  readonly notifyDelayAfter?: cdk.Duration;
-
-  /**
-   * The maximum time that a job run can consume resources before it is terminated and enters TIMEOUT status.
-   *
-   * @default cdk.Duration.hours(48)
-   */
-  readonly timeout?: cdk.Duration;
-
-  /**
-   * The type of predefined worker that is allocated when a job runs.
-   *
-   * @default - differs based on specific Glue version
-   */
-  readonly workerType?: TriggerType;
-
-  /**
-   * The number of workers of a defined {@link TriggerType} that are allocated when a job runs.
-   *
-   * @default - differs based on specific Glue version/worker type
-   */
-  readonly workerCount?: number;
-
-  /**
-   * The {@link Connection}s used for this job.
-   *
-   * Connections are used to connect to other AWS Service or resources within a VPC.
-   *
-   * @default [] - no connections are added to the job
-   */
-  readonly connections?: IConnection[];
-
-  /**
-   * The {@link SecurityConfiguration} to use for this job.
-   *
-   * @default - no security configuration.
-   */
-  readonly securityConfiguration?: ISecurityConfiguration;
-
-  /**
-   * The default arguments for this job, specified as name-value pairs.
-   *
-   * @see https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html for a list of reserved parameters
-   * @default - no arguments
-   */
-  readonly defaultArguments?: { [key: string]: string };
-
-  /**
-   * The tags to add to the resources on which the job runs
-   *
-   * @default {} - no tags
-   */
   readonly tags?: { [key: string]: string };
 
   /**
@@ -432,35 +355,6 @@ export interface TriggerProps {
    * @default - a role is automatically generated
    */
   readonly role?: iam.IRole;
-
-  /**
-   * Enables the collection of metrics for job profiling.
-   *
-   * @default - no profiling metrics emitted.
-   *
-   * @see `--enable-metrics` at https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html
-   */
-  readonly enableProfilingMetrics? :boolean;
-
-  /**
-   * Enables the Spark UI debugging and monitoring with the specified props.
-   *
-   * @default - Spark UI debugging and monitoring is disabled.
-   *
-   * @see https://docs.aws.amazon.com/glue/latest/dg/monitor-spark-ui-jobs.html
-   * @see https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html
-   */
-  readonly sparkUI?: SparkUIProps,
-
-  /**
-   * Enables continuous logging with the specified props.
-   *
-   * @default - continuous logging is disabled.
-   *
-   * @see https://docs.aws.amazon.com/glue/latest/dg/monitor-continuous-logging-enable.html
-   * @see https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html
-   */
-  readonly continuousLogging?: ContinuousLoggingProps,
 }
 
 /**
@@ -517,7 +411,6 @@ export class Trigger extends TriggerBase {
       physicalName: props.triggerName,
     });
 
-    const executable = props.executable.bind();
 
     this.role = props.role ?? new iam.Role(this, 'ServiceRole', {
       assumedBy: new iam.ServicePrincipal('glue.amazonaws.com'),
@@ -527,35 +420,15 @@ export class Trigger extends TriggerBase {
 
 
     const triggerResource = new CfnTrigger(this, 'Resource', {
-      workflowName: null,
+      workflowName: props.workflowName,
       tags: props.tags,
-      startOnCreation: null,
-      schedule: null,
-      predicate: null,
+      startOnCreation: props.startOnCreation,
+      schedule: props.schedule,
+      predicate: props.predicate,
       name: props.triggerName,
-      actions: null,
+      actions: props.actions,
       description: props.description,
-      type: null,
-      // name: props.jobName,
-      // description: props.description,
-      // role: this.role.roleArn,
-      // command: {
-      //   name: executable.type.name,
-      //   scriptLocation: this.codeS3ObjectUrl(executable.script),
-      //   pythonVersion: executable.pythonVersion,
-      // },
-      // glueVersion: executable.glueVersion.name,
-      // workerType: props.workerType?.name,
-      // numberOfWorkers: props.workerCount,
-      // maxCapacity: props.maxCapacity,
-      // maxRetries: props.maxRetries,
-      // executionProperty: props.maxConcurrentRuns ? { maxConcurrentRuns: props.maxConcurrentRuns } : undefined,
-      // notificationProperty: props.notifyDelayAfter ? { notifyDelayAfter: props.notifyDelayAfter.toMinutes() } : undefined,
-      // timeout: props.timeout?.toMinutes(),
-      // connections: props.connections ? { connections: props.connections.map((connection) => connection.connectionName) } : undefined,
-      // securityConfiguration: props.securityConfiguration?.securityConfigurationName,
-      // tags: props.tags,
-      // defaultArguments,
+      type: props.type.name,
     });
 
     const resourceName = this.getResourceNameAttribute(triggerResource.ref);
@@ -573,7 +446,7 @@ export class Trigger extends TriggerBase {
 function triggeerArn(scope: constructs.Construct, jobName: string) : string {
   return cdk.Stack.of(scope).formatArn({
     service: 'glue',
-    resource: 'job',
+    resource: 'trigger',
     resourceName: jobName,
   });
 }
