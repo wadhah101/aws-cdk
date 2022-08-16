@@ -15,36 +15,14 @@ import { ISecurityConfiguration } from './security-configuration';
  * If you need to use a WorkerType that doesn't exist as a static member, you
  * can instantiate a `WorkerType` object, e.g: `WorkerType.of('other type')`.
  */
-export class TriggerType {
+export enum TriggerType {
   /**
    * TODO
    */
-  public static readonly Scheduled = new TriggerType('SCHEDULED');
-
-  /**
-   * TODO
-   */
-  public static readonly JobEvents = new TriggerType('JOB_EVENTS');
-
-  /**
-   * TODO
-   */
-  public static readonly onDemand = new TriggerType('ON_DEMAND');
-
-
-  /**
-   * TODO
-   */
-  public static readonly conditional = new TriggerType('CONDITIONAL')
-
-  /**
-   * The name of this WorkerType, as expected by Job resource.
-   */
-  public readonly name: string;
-
-  private constructor(name: string) {
-    this.name = name;
-  }
+  SCHEDULED = 'SCHEDULED',
+  EVENT = 'EVENT',
+  ON_DEMAND = 'ON_DEMAND',
+  CONDITIONAL = 'CONDITIONAL'
 }
 
 export enum TriggerState {
@@ -67,11 +45,15 @@ export enum TriggerState {
    * State indicating job is starting
    */
   ACTIVATING = 'ACTIVATING',
+  CREATING = 'CREATING',
+  DEACTIVATING = 'DEACTIVATING',
+  DELETING = 'DELETING',
+  UPDATING = 'UPDATING'
 }
 
 
 /**
- * Interface representing a created or an imported {@link Job}.
+ * Interface representing a created or an imported {@link Trigger}.
  */
 export interface ITrigger extends cdk.IResource {
   /**
