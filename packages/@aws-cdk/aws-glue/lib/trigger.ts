@@ -47,48 +47,33 @@ export class TriggerType {
   }
 }
 
-export enum triggerState {
+export enum TriggerState {
   /**
-   * State indicating job run succeeded
+   * TODO
    */
-  SUCCEEDED = 'SUCCEEDED',
+  CREATED = 'CREATED',
 
   /**
    * State indicating job run failed
    */
-  FAILED = 'FAILED',
+  ACTIVATED = ' ACTIVATED',
 
   /**
    * State indicating job run timed out
    */
-  TIMEOUT = 'TIMEOUT',
+  DEACTIVATED = 'DEACTIVATED',
 
   /**
    * State indicating job is starting
    */
-  STARTING = 'STARTING',
-
-  /**
-   * State indicating job is running
-   */
-  RUNNING = 'RUNNING',
-
-  /**
-   * State indicating job is stopping
-   */
-  STOPPING = 'STOPPING',
-
-  /**
-   * State indicating job stopped
-   */
-  STOPPED = 'STOPPED',
+  ACTIVATING = 'ACTIVATING',
 }
 
 
 /**
  * Interface representing a created or an imported {@link Job}.
  */
-export interface ITrigger extends cdk.IResource, iam.IGrantable {
+export interface ITrigger extends cdk.IResource {
   /**
    * The name of the job.
    * @attribute
