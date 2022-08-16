@@ -9,7 +9,6 @@ import { Code, JobExecutable, JobExecutableConfig, JobType } from '.';
 import { IConnection } from './connection';
 import { CfnJob ,CfnTrigger } from './glue.generated';
 import { ISecurityConfiguration } from './security-configuration';
-
 /**
  * The type of predefined worker that is allocated when a job runs.
  *
@@ -333,7 +332,7 @@ export interface TriggerProps {
   
   readonly predicate: any
   
-  readonly schedule: any,
+  readonly schedule: events.Schedule,
 
   readonly startOnCreation: boolean
   
@@ -429,7 +428,7 @@ export class Trigger extends TriggerBase {
       workflowName: props.workflowName,
       tags: props.tags,
       startOnCreation: props.startOnCreation,
-      schedule: props.schedule,
+      schedule: props.schedule.expressionString,
       predicate: props.predicate,
       name: props.triggerName,
       actions: props.actions,
