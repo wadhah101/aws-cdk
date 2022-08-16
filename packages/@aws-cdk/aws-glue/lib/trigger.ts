@@ -7,7 +7,7 @@ import * as cdk from '@aws-cdk/core';
 import * as constructs from 'constructs';
 import { Code, JobExecutable, JobExecutableConfig, JobType } from '.';
 import { IConnection } from './connection';
-import { CfnJob ,CfnTrigger } from './glue.generated';
+import { CfnJob, CfnTrigger } from './glue.generated';
 import { ISecurityConfiguration } from './security-configuration';
 /**
  * The type of predefined worker that is allocated when a job runs.
@@ -101,207 +101,12 @@ export interface ITrigger extends cdk.IResource, iam.IGrantable {
    */
   readonly triggerArn: string;
 
-  /**
-   * Defines a CloudWatch event rule triggered when something happens with this job.
-   *
-   * @see https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html#glue-event-types
-   */
-  onEvent(id: string, options?: events.OnEventOptions): events.Rule;
-
-  /**
-   * Defines a CloudWatch event rule triggered when this job moves to the input jobState.
-   *
-   * @see https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html#glue-event-types
-   */
-  onStateChange(id: string, jobState: triggerState, options?: events.OnEventOptions): events.Rule;
-
-  /**
-   * Defines a CloudWatch event rule triggered when this job moves to the SUCCEEDED state.
-   *
-   * @see https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html#glue-event-types
-   */
-  onSuccess(id: string, options?: events.OnEventOptions): events.Rule;
-
-  /**
-   * Defines a CloudWatch event rule triggered when this job moves to the FAILED state.
-   *
-   * @see https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html#glue-event-types
-   */
-  onFailure(id: string, options?: events.OnEventOptions): events.Rule;
-
-  /**
-   * Defines a CloudWatch event rule triggered when this job moves to the TIMEOUT state.
-   *
-   * @see https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html#glue-event-types
-   */
-  onTimeout(id: string, options?: events.OnEventOptions): events.Rule;
-
-  /**
-   * Create a CloudWatch metric.
-   *
-   * @param metricName name of the metric typically prefixed with `glue.driver.`, `glue.<executorId>.` or `glue.ALL.`.
-   * @param type the metric type.
-   * @param props metric options.
-   *
-   * @see https://docs.aws.amazon.com/glue/latest/dg/monitoring-awsglue-with-cloudwatch-metrics.html
-   */
-  metric(metricName: string, type: MetricType, props?: cloudwatch.MetricOptions): cloudwatch.Metric;
-
-  /**
-   * Create a CloudWatch Metric indicating job success.
-   */
-  metricSuccess(props?: cloudwatch.MetricOptions): cloudwatch.Metric;
-
-  /**
-   * Create a CloudWatch Metric indicating job failure.
-   */
-  metricFailure(props?: cloudwatch.MetricOptions): cloudwatch.Metric;
-
-  /**
-   * Create a CloudWatch Metric indicating job timeout.
-   */
-  metricTimeout(props?: cloudwatch.MetricOptions): cloudwatch.Metric;
 }
 
-abstract class TriggerBase extends cdk.Resource implements IJob {
-
-  public abstract readonly jobArn: string;
-  public abstract readonly jobName: string;
+abstract class TriggerBase extends cdk.Resource implements ITrigger {
+  public abstract readonly triggerArn: string;
+  public abstract readonly triggerName: string;
   public abstract readonly grantPrincipal: iam.IPrincipal;
-
-  /**
-   * Create a CloudWatch Event Rule for this Glue Job when it's in a given state
-   *
-   * @param id construct id
-   * @param options event options. Note that some values are overridden if provided, these are
-   *  - eventPattern.source = ['aws.glue']
-   *  - eventPattern.detailType = ['Glue Job State Change', 'Glue Job Run Status']
-   *  - eventPattern.detail.jobName = [this.jobName]
-   *
-   * @see https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html#glue-event-types
-   */
-  public onEvent(id: string, options: events.OnEventOptions = {}): events.Rule {
-    const rule = new events.Rule(this, id, options);
-    rule.addTarget(options.target);
-    rule.addEventPattern({
-      source: ['aws.glue'],
-      detailType: ['Glue Job State Change', 'Glue Job Run Status'],
-      detail: {
-        jobName: [this.jobName],
-      },
-    });
-    return rule;
-  }
-
-  /**
-   * Create a CloudWatch Event Rule for the transition into the input jobState.
-   *
-   * @param id construct id.
-   * @param jobState the job state.
-   * @param options optional event options.
-   */
-  public onStateChange(id: string, jobState: triggerState, options: events.OnEventOptions = {}): events.Rule {
-    const rule = this.onEvent(id, {
-      description: `Rule triggered when Glue job ${this.jobName} is in ${jobState} state`,
-      ...options,
-    });
-    rule.addEventPattern({
-      detail: {
-        state: [jobState],
-      },
-    });
-    return rule;
-  }
-
-  /**
-   * Create a CloudWatch Event Rule matching JobState.SUCCEEDED.
-   *
-   * @param id construct id.
-   * @param options optional event options. default is {}.
-   */
-  public onSuccess(id: string, options: events.OnEventOptions = {}): events.Rule {
-    return this.onStateChange(id, triggerState.SUCCEEDED, options);
-  }
-
-  /**
-   * Return a CloudWatch Event Rule matching FAILED state.
-   *
-   * @param id construct id.
-   * @param options optional event options. default is {}.
-   */
-  public onFailure(id: string, options: events.OnEventOptions = {}): events.Rule {
-    return this.onStateChange(id, triggerState.FAILED, options);
-  }
-
-  /**
-   * Return a CloudWatch Event Rule matching TIMEOUT state.
-   *
-   * @param id construct id.
-   * @param options optional event options. default is {}.
-   */
-  public onTimeout(id: string, options: events.OnEventOptions = {}): events.Rule {
-    return this.onStateChange(id, triggerState.TIMEOUT, options);
-  }
-
-  /**
-   * Create a CloudWatch metric.
-   *
-   * @param metricName name of the metric typically prefixed with `glue.driver.`, `glue.<executorId>.` or `glue.ALL.`.
-   * @param type the metric type.
-   * @param props metric options.
-   *
-   * @see https://docs.aws.amazon.com/glue/latest/dg/monitoring-awsglue-with-cloudwatch-metrics.html
-   */
-  public metric(metricName: string, type: MetricType, props?: cloudwatch.MetricOptions): cloudwatch.Metric {
-    return new cloudwatch.Metric({
-      metricName,
-      namespace: 'Glue',
-      dimensionsMap: {
-        JobName: this.jobName,
-        JobRunId: 'ALL',
-        Type: type,
-      },
-      ...props,
-    }).attachTo(this);
-  }
-
-  /**
-   * Return a CloudWatch Metric indicating job success.
-   *
-   * This metric is based on the Rule returned by no-args onSuccess() call.
-   */
-  public metricSuccess(props?: cloudwatch.MetricOptions): cloudwatch.Metric {
-    return metricRule(this.metricJobStateRule('SuccessMetricRule', triggerState.SUCCEEDED), props);
-  }
-
-  /**
-   * Return a CloudWatch Metric indicating job failure.
-   *
-   * This metric is based on the Rule returned by no-args onFailure() call.
-   */
-  public metricFailure(props?: cloudwatch.MetricOptions): cloudwatch.Metric {
-    return metricRule(this.metricJobStateRule('FailureMetricRule', triggerState.FAILED), props);
-  }
-
-  /**
-   * Return a CloudWatch Metric indicating job timeout.
-   *
-   * This metric is based on the Rule returned by no-args onTimeout() call.
-   */
-  public metricTimeout(props?: cloudwatch.MetricOptions): cloudwatch.Metric {
-    return metricRule(this.metricJobStateRule('TimeoutMetricRule', triggerState.TIMEOUT), props);
-  }
-
-  /**
-   * Creates or retrieves a singleton event rule for the input job state for use with the metric JobState methods.
-   *
-   * @param id construct id.
-   * @param jobState the job state.
-   * @private
-   */
-  private metricJobStateRule(id: string, jobState: triggerState): events.Rule {
-    return this.node.tryFindChild(id) as events.Rule ?? this.onStateChange(id, jobState);
-  }
 }
 
 /**
@@ -311,7 +116,7 @@ export interface TriggerAttributes {
   /**
    * The name of the job.
    */
-  readonly jobName: string;
+  readonly triggerName: string;
 
   /**
    * The IAM role assumed by Glue to run this job.
@@ -329,17 +134,17 @@ export interface TriggerProps {
   readonly actions: any[]
 
   readonly description: string,
-  
+
   readonly predicate: any
-  
+
   readonly schedule: events.Schedule,
 
   readonly startOnCreation: boolean
-  
+
   readonly type: TriggerType,
 
-  readonly workflowName: string 
-  
+  readonly workflowName: string
+
   /**
    * The name of the job.
    *
