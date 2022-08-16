@@ -20,17 +20,23 @@ export class TriggerType {
   /**
    * TODO
    */
-  public static readonly Schedule = new TriggerType('Schedule');
+  public static readonly Scheduled = new TriggerType('SCHEDULED');
 
   /**
    * TODO
    */
-  public static readonly JobEvents = new TriggerType('JobEvents');
+  public static readonly JobEvents = new TriggerType('JOB_EVENTS');
 
   /**
    * TODO
    */
-  public static readonly OnDemand = new TriggerType('OnDemand');
+  public static readonly onDemand = new TriggerType('ON_DEMAND');
+
+
+  /**
+   * TODO
+   */
+  public static readonly conditional = new TriggerType('CONDITIONAL')
 
   /**
    * The name of this WorkerType, as expected by Job resource.
