@@ -1,14 +1,8 @@
-import * as cloudwatch from '@aws-cdk/aws-cloudwatch';
 import * as events from '@aws-cdk/aws-events';
 import * as iam from '@aws-cdk/aws-iam';
-import * as logs from '@aws-cdk/aws-logs';
-import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import * as constructs from 'constructs';
-import { Code, JobExecutable, JobExecutableConfig, JobType } from '.';
-import { IConnection } from './connection';
-import { CfnJob, CfnTrigger } from './glue.generated';
-import { ISecurityConfiguration } from './security-configuration';
+import { CfnTrigger } from './glue.generated';
 /**
  * The type of predefined worker that is allocated when a job runs.
  *
@@ -57,13 +51,13 @@ export enum TriggerState {
  */
 export interface ITrigger extends cdk.IResource {
   /**
-   * The name of the job.
+   * The name of the trigger.
    * @attribute
    */
   readonly triggerName: string;
 
   /**
-   * The ARN of the job.
+   * The ARN of the image.png.
    * @attribute
    */
   readonly triggerArn: string;
@@ -73,7 +67,7 @@ export interface ITrigger extends cdk.IResource {
 abstract class TriggerBase extends cdk.Resource implements ITrigger {
   public abstract readonly triggerArn: string;
   public abstract readonly triggerName: string;
-  public abstract readonly grantPrincipal: iam.IPrincipal;
+  // public abstract readonly grantPrincipal: iam.IPrincipal;
 }
 
 /**
@@ -100,13 +94,13 @@ export interface TriggerProps {
 
   readonly actions: any[]
 
-  readonly description: string,
+  readonly description?: string,
 
-  readonly predicate: any
+  readonly predicate?: any
 
-  readonly schedule: events.Schedule,
+  readonly schedule?: events.Schedule,
 
-  readonly startOnCreation: boolean
+  readonly startOnCreation?: boolean
 
   readonly type: TriggerType,
 
@@ -169,12 +163,12 @@ export class Trigger extends TriggerBase {
   /**
    * The IAM role Glue assumes to run this job.
    */
-  public readonly role: iam.IRole;
+  // public readonly role: iam.IRole;
 
   /**
    * The principal this Glue Job is running as.
    */
-  public readonly grantPrincipal: iam.IPrincipal;
+  // public readonly grantPrincipal: iam.IPrincipal;
 
   /**
    * The Spark UI logs location if Spark UI monitoring and debugging is enabled.
@@ -189,18 +183,18 @@ export class Trigger extends TriggerBase {
     });
 
 
-    this.role = props.role ?? new iam.Role(this, 'ServiceRole', {
-      assumedBy: new iam.ServicePrincipal('glue.amazonaws.com'),
-      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSGlueServiceRole')],
-    });
-    this.grantPrincipal = this.role;
+    // this.role = props.role ?? new iam.Role(this, 'ServiceRole', {
+    //   assumedBy: new iam.ServicePrincipal('glue.amazonaws.com'),
+    //   managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSGlueServiceRole')],
+    // });
+    // this.grantPrincipal = this.role;
 
 
     const triggerResource = new CfnTrigger(this, 'Resource', {
       workflowName: props.workflowName,
       tags: props.tags,
       startOnCreation: props.startOnCreation,
-      schedule: props.schedule.expressionString,
+      schedule: props.schedule?.expressionString,
       predicate: props.predicate,
       name: props.triggerName,
       actions: props.actions,
