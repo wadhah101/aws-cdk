@@ -87,68 +87,33 @@ export interface TriggerAttributes {
   readonly role?: iam.IRole;
 }
 
-/**
- * Construction properties for {@link Job}.
- */
-export interface TriggerProps {
+
+export interface TriggerBaseProps {
 
   readonly actions: any[]
 
   readonly description?: string,
 
-  readonly predicate?: any
-
-  readonly schedule?: events.Schedule,
-
-  readonly startOnCreation?: boolean
-
-  readonly type: TriggerType,
-
   readonly workflowName?: string
 
-  /**
-   * The name of the job.
-   *
-   * @default - a name is automatically generated
-   */
   readonly triggerName?: string;
 
-
   readonly tags?: { [key: string]: string };
-
-  /**
-   * The IAM role assumed by Glue to run this job.
-   *
-   * If providing a custom role, it needs to trust the Glue service principal (glue.amazonaws.com) and be granted sufficient permissions.
-   *
-   * @see https://docs.aws.amazon.com/glue/latest/dg/getting-started-access.html
-   *
-   * @default - a role is automatically generated
-   */
-  readonly role?: iam.IRole;
 }
 
 /**
+ * Construction properties for {@link Job}.
+ */
+export interface ScheduledTriggerProps extends TriggerBaseProps {
+
+  readonly schedule: events.Schedule,
+
+  readonly startOnCreation?: boolean
+}
+/**
  * A Glue Job.
  */
-export class Trigger extends TriggerBase {
-  // /**
-  //  * Creates a Glue Job
-  //  *
-  //  * @param scope The scope creating construct (usually `this`).
-  //  * @param id The construct's id.
-  //  * @param attrs Import attributes
-  //  */
-  // public static fromTriggerAttributes(scope: constructs.Construct, id: string, attrs: TriggerAttributes): ITrigger {
-  //   class Import extends TriggerBase {
-  //     public readonly triggerName = attrs.jobName;
-  //     public readonly triggerArn = 'TODO';
-  //     // jobArn(scope, attrs.jobName);
-  //     public readonly grantPrincipal = attrs.role ?? new iam.UnknownPrincipal({ resource: this });
-  //   }
-
-  //   return new Import(scope, id);
-  // }
+export class ScheduledTrigger extends TriggerBase {
 
   /**
    * The ARN of the job.
@@ -177,7 +142,7 @@ export class Trigger extends TriggerBase {
    * @see https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html
    */
 
-  constructor(scope: constructs.Construct, id: string, props: TriggerProps) {
+  constructor(scope: constructs.Construct, id: string, props: ScheduledTriggerProps) {
     super(scope, id, {
       physicalName: props.triggerName,
     });
@@ -195,11 +160,10 @@ export class Trigger extends TriggerBase {
       tags: props.tags,
       startOnCreation: props.startOnCreation,
       schedule: props.schedule?.expressionString,
-      predicate: props.predicate,
       name: props.triggerName,
       actions: props.actions,
       description: props.description,
-      type: props.type,
+      type: TriggerType.SCHEDULED,
     });
 
     const resourceName = this.getResourceNameAttribute(triggerResource.ref);

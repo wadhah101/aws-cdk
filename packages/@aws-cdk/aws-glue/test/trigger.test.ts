@@ -8,7 +8,7 @@ describe('Trigger', () => {
   const triggerName = 'test-trigger';
   let stack: cdk.Stack;
   let trigger: glue.Trigger;
-  let defaultProps: glue.TriggerProps;
+  let defaultProps: glue.ScheduledTriggerProps;
 
   beforeEach(() => {
     stack = new cdk.Stack();
@@ -48,6 +48,7 @@ describe('Trigger', () => {
         Template.fromStack(stack).hasResourceProperties('AWS::Glue::Trigger', {
           Name: triggerName,
         });
+
       });
 
       // eslint-disable-next-line jest/no-commented-out-tests
