@@ -104,7 +104,7 @@ export interface TriggerProps {
 
   readonly type: TriggerType,
 
-  readonly workflowName: string
+  readonly workflowName?: string
 
   /**
    * The name of the job.
